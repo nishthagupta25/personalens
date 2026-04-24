@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PersonaLens — AI Personality Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+:root {
+  --bg:       #08090d;
+  --surface:  #0f1117;
+  --surface2: #161820;
+  --border:   rgba(255,255,255,0.07);
+  --border-hi:rgba(255,255,255,0.15);
+  --accent:   #7c6af7;
+  --accent2:  #4fd9c4;
+  --accent3:  #f7c06a;
+  --text:     #e8e8f0;
+  --muted:    #6b6c7e;
+  --danger:   #f05c5c;
+  --c-O: #7c6af7;
+  --c-C: #4fd9c4;
+  --c-E: #f7c06a;
+  --c-A: #f06aab;
+  --c-N: #6af778;
+  --mono:    'DM Mono', monospace;
+  --display: 'Syne', sans-serif;
+  --radius:    12px;
+  --radius-lg: 18px;
+}
+ 
+html { scroll-behavior: smooth; }
+ 
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+ 
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(124,106,247,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,106,247,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+ 
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 40px;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  background: rgba(8,9,13,0.7);
+  position: sticky; top: 0; z-index: 100;
+}
+ 
+.logo {
+  font-family: var(--display);
+  font-weight: 800; font-size: 18px;
+  letter-spacing: -0.02em;
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.logo-dot { color: var(--accent); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.status-dot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
+.dot.online { background: var(--accent2); animation: pulse 2s infinite; }
+.dot.error  { background: var(--danger); }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+.nav-badge { font-size: 11px; color: var(--accent2); border: 1px solid rgba(79,217,196,0.25); padding: 3px 10px; border-radius: 100px; letter-spacing: 0.05em; }
+ 
+.page { position: relative; z-index: 1; }
+ 
+.hero { max-width: 720px; margin: 0 auto; padding: 72px 24px 44px; text-align: center; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid rgba(124,106,247,0.3);
+  padding: 5px 14px; border-radius: 100px; margin-bottom: 26px;
+  animation: fadeUp 0.5s ease both;
+}
+h1 {
+  font-family: var(--display); font-size: clamp(34px, 5.5vw, 52px);
+  font-weight: 800; line-height: 1.07; letter-spacing: -0.03em;
+  margin-bottom: 18px; animation: fadeUp 0.5s 0.08s ease both;
+}
+h1 em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-sub { color: var(--muted); font-size: 15px; max-width: 460px; margin: 0 auto 36px; animation: fadeUp 0.5s 0.16s ease both; }
+.trait-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 52px; animation: fadeUp 0.5s 0.24s ease both; }
+.pill { font-size: 11px; letter-spacing: 0.06em; padding: 5px 13px; border-radius: 100px; border: 1px solid; }
+.pill-O { color:var(--c-O); border-color:rgba(124,106,247,0.3); background:rgba(124,106,247,0.07); }
+.pill-C { color:var(--c-C); border-color:rgba(79,217,196,0.3);  background:rgba(79,217,196,0.07); }
+.pill-E { color:var(--c-E); border-color:rgba(247,192,106,0.3); background:rgba(247,192,106,0.07); }
+.pill-A { color:var(--c-A); border-color:rgba(240,106,171,0.3); background:rgba(240,106,171,0.07); }
+.pill-N { color:var(--c-N); border-color:rgba(106,247,120,0.3); background:rgba(106,247,120,0.07); }
+ 
+.input-section { max-width: 720px; margin: 0 auto; padding: 0 24px 60px; animation: fadeUp 0.5s 0.3s ease both; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: border-color 0.3s, box-shadow 0.3s; }
+.card:focus-within { border-color: rgba(124,106,247,0.4); box-shadow: 0 0 0 1px rgba(124,106,247,0.12), 0 24px 64px rgba(0,0,0,0.5); }
+.card-topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+.dots { display: flex; gap: 5px; }
+.dot-r{width:10px;height:10px;border-radius:50%;background:#f05c5c;}
+.dot-y{width:10px;height:10px;border-radius:50%;background:var(--accent3);}
+.dot-g{width:10px;height:10px;border-radius:50%;background:var(--accent2);}
+.topbar-label { font-size: 11px; color: var(--muted); letter-spacing: 0.07em; }
+.sample-bar { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sample-label { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.sample-btn { font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+.sample-btn:hover { color: var(--text); border-color: var(--border-hi); }
+textarea { width: 100%; min-height: 190px; background: transparent; border: none; outline: none; resize: vertical; padding: 18px 18px 10px; font-family: var(--mono); font-size: 14px; color: var(--text); line-height: 1.75; }
+textarea::placeholder { color: var(--muted); font-style: italic; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-top: 1px solid var(--border); background: var(--surface2); flex-wrap: wrap; gap: 10px; }
+.char-count { font-size: 12px; color: var(--muted); transition: color 0.2s; }
+.char-count.warn { color: var(--accent3); }
+.char-count.good { color: var(--accent2); }
+.footer-right { display: flex; align-items: center; gap: 10px; }
+.source-select { font-family: var(--mono); font-size: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 7px; outline: none; }
+.analyze-btn { display: flex; align-items: center; gap: 7px; background: var(--accent); color: #fff; border: none; padding: 9px 20px; border-radius: 9px; font-family: var(--mono); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; letter-spacing: 0.02em; }
+.analyze-btn:hover:not(:disabled) { background: #9284f8; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,106,247,0.35); }
+.analyze-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-arrow { transition: transform 0.2s; }
+.analyze-btn:hover:not(:disabled) .btn-arrow { transform: translateX(3px); }
+ 
+.error-banner { display: none; max-width: 720px; margin: 0 auto 20px; padding: 0 24px; }
+.error-banner.visible { display: block; }
+.error-inner { background: rgba(240,92,92,0.1); border: 1px solid rgba(240,92,92,0.3); border-radius: var(--radius); padding: 14px 18px; font-size: 13px; color: var(--danger); display: flex; align-items: flex-start; gap: 10px; }
+ 
+.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(8,9,13,0.88); backdrop-filter: blur(10px); z-index: 200; flex-direction: column; align-items: center; justify-content: center; gap: 22px; }
+.loading-overlay.active { display: flex; }
+.loading-ring { width: 52px; height: 52px; border: 2px solid rgba(124,106,247,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.85s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-title { font-family: var(--display); font-size: 17px; font-weight: 600; }
+.loading-steps { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+.loading-step { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; opacity: 0; animation: stepIn 0.35s ease forwards; }
+.loading-step.done { color: var(--accent2); }
+.step-dot { width:5px;height:5px;border-radius:50%;background:currentColor; }
+@keyframes stepIn { from{opacity:0;transform:translateX(-8px)}to{opacity:0.85;transform:translateX(0)} }
+ 
+#results { display: none; max-width: 720px; margin: 0 auto; padding: 0 24px 80px; }
+#results.visible { display: block; }
+.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.results-title { font-family: var(--display); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.confidence-badge { font-size: 11px; color: var(--accent2); border: 1px solid rgba(79,217,196,0.3); padding: 4px 12px; border-radius: 100px; }
+.section-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+ 
+.ocean-grid { display: flex; flex-direction: column; gap: 9px; margin-bottom: 22px; }
+.trait-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 16px; display: grid; grid-template-columns: 150px 1fr 48px; align-items: center; gap: 14px; animation: fadeUp 0.4s ease both; }
+.trait-name { font-family: var(--display); font-size: 13px; font-weight: 600; }
+.trait-bar-bg { height: 5px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
+.trait-bar-fill { height: 100%; border-radius: 100px; width: 0%; transition: width 1.3s cubic-bezier(0.4,0,0.2,1); }
+.trait-score { font-family: var(--mono); font-size: 13px; font-weight: 500; text-align: right; }
+.trait-evidence { grid-column: 1/-1; font-size: 11px; color: var(--muted); line-height: 1.5; padding-top: 6px; border-top: 1px solid var(--border); margin-top: 2px; }
+ 
+.sentiment-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 22px; display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; animation: fadeUp 0.4s ease both; }
+.sent-item { text-align: center; }
+.sent-value { font-family: var(--display); font-size: 20px; font-weight: 700; }
+.sent-label { font-size: 11px; color: var(--muted); margin-top: 3px; letter-spacing: 0.06em; }
+ 
+.insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.insight-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; animation: fadeUp 0.4s ease both; }
+.insight-card-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.ic-dot { width:5px;height:5px;border-radius:50%; }
+.insight-value { font-family: var(--display); font-size: 15px; font-weight: 600; margin-bottom: 5px; line-height: 1.3; }
+.insight-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+ 
+.sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.sw-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; animation: fadeUp 0.4s ease both; }
+.sw-title { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.sw-title.s { color: var(--accent2); } .sw-title.w { color: var(--danger); }
+.sw-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.sw-list li { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+.sw-list li::before { content:''; width:4px;height:4px;border-radius:50%;margin-top:7px;flex-shrink:0; }
+.sw-card.s .sw-list li::before { background: var(--accent2); }
+.sw-card.w .sw-list li::before { background: var(--danger); }
+ 
+.career-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.career-tag { font-family: var(--mono); font-size: 12px; background: rgba(124,106,247,0.1); border: 1px solid rgba(124,106,247,0.25); color: var(--accent); padding: 6px 14px; border-radius: 8px; }
+ 
+.reset-btn { display: block; width: 100%; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 12px; border-radius: var(--radius); font-family: var(--mono); font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.reset-btn:hover { border-color: var(--border-hi); color: var(--text); }
+ 
+.features { max-width: 720px; margin: 0 auto; padding: 0 24px 32px; display: grid; grid-template-columns: repeat(auto-fit,minmax(155px,1fr)); gap: 10px; animation: fadeUp 0.5s 0.38s ease both; }
+.feat-chip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: flex; align-items: flex-start; gap: 10px; transition: border-color 0.2s; }
+.feat-chip:hover { border-color: var(--border-hi); }
+.feat-icon { width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0; }
+.fi-p{background:rgba(124,106,247,0.12);} .fi-t{background:rgba(79,217,196,0.12);} .fi-a{background:rgba(247,192,106,0.12);} .fi-k{background:rgba(240,106,171,0.12);}
+.feat-text strong { display:block;font-family:var(--display);font-size:12px;font-weight:600;margin-bottom:2px; }
+.feat-text span { font-size:11px;color:var(--muted);line-height:1.4; }
+ 
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)} }
+ 
+footer { border-top: 1px solid var(--border); padding: 22px 40px; display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 12px; }
+ 
+@media(max-width:560px){
+  nav{padding:14px 18px;} h1{font-size:30px;}
+  .insight-grid,.sw-grid{grid-template-columns:1fr;}
+  .sentiment-row{grid-template-columns:repeat(2,1fr);}
+  .trait-row{grid-template-columns:100px 1fr 36px;}
+  footer{flex-direction:column;gap:6px;text-align:center;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+ 
+<nav>
+  <div class="logo">
+    <div class="logo-icon">🔍</div>
+    Persona<span class="logo-dot">Lens</span>
+  </div>
+  <div class="nav-right">
+    <div class="status-dot">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">checking...</span>
+    </div>
+    <div class="nav-badge">v1.0 · BETA</div>
+  </div>
+</nav>
+ 
+<header class="hero">
+  <div class="hero-tag">NLP · Big Five · Behavioral AI</div>
+  <h1>Understand anyone from<br><em>how they write</em></h1>
+  <p class="hero-sub">Paste tweets, chats, or essays. Get a deep personality profile powered by a 3-layer NLP pipeline.</p>
+  <div class="trait-pills">
+    <span class="pill pill-O">◆ Openness</span>
+    <span class="pill pill-C">◆ Conscientiousness</span>
+    <span class="pill pill-E">◆ Extraversion</span>
+    <span class="pill pill-A">◆ Agreeableness</span>
+    <span class="pill pill-N">◆ Neuroticism</span>
+  </div>
+</header>
+ 
+<div class="error-banner" id="errorBanner">
+  <div class="error-inner">
+    <span>⚠</span>
+    <span id="errorMsg">Cannot connect to backend.</span>
+  </div>
+</div>
+ 
+<section class="input-section">
+  <div class="card" id="inputCard">
+    <div class="card-topbar">
+      <div class="dots"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div></div>
+      <div class="topbar-label">personalens_input.txt</div>
+      <div class="topbar-label">FastAPI · NLP Pipeline</div>
+    </div>
+    <div class="sample-bar">
+      <span class="sample-label">Try:</span>
+      <button class="sample-btn" onclick="loadSample('analytical')">Analytical thinker</button>
+      <button class="sample-btn" onclick="loadSample('creative')">Creative writer</button>
+      <button class="sample-btn" onclick="loadSample('leader')">Natural leader</button>
+      <button class="sample-btn" onclick="loadSample('introvert')">Quiet introvert</button>
+    </div>
+    <textarea id="textInput"
+      placeholder="Paste your text here — tweets, LinkedIn posts, chat messages, journal entries, essays...&#10;&#10;Aim for at least 100 words for best results."
+      oninput="updateCount()"></textarea>
+    <div class="card-footer">
+      <span class="char-count" id="charCount">0 characters</span>
+      <div class="footer-right">
+        <select class="source-select" id="sourceType">
+          <option value="general">General text</option>
+          <option value="tweets">Tweets</option>
+          <option value="chat">Chat messages</option>
+          <option value="essay">Essay / article</option>
+          <option value="linkedin">LinkedIn posts</option>
+        </select>
+        <button class="analyze-btn" id="analyzeBtn" onclick="runAnalysis()" disabled>
+          Analyze <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+ 
+<section class="features">
+  <div class="feat-chip"><div class="feat-icon fi-p">🧠</div><div class="feat-text"><strong>OCEAN Model</strong><span>Big Five traits scored 0–100</span></div></div>
+  <div class="feat-chip"><div class="feat-icon fi-t">💬</div><div class="feat-text"><strong>Comms Style</strong><span>Tone, voice, and pattern</span></div></div>
+  <div class="feat-chip"><div class="feat-icon fi-a">⚡</div><div class="feat-text"><strong>Behavioral AI</strong><span>Thinking & decision style</span></div></div>
+  <div class="feat-chip"><div class="feat-icon fi-k">🎯</div><div class="feat-text"><strong>Career Fit</strong><span>Roles matched to profile</span></div></div>
+</section>
+ 
+<section id="results">
+  <div class="results-header">
+    <div class="results-title">Personality profile</div>
+    <div class="confidence-badge" id="confidenceBadge">Confidence: —</div>
+  </div>
+ 
+  <div class="section-label">Live sentiment — from your FastAPI backend</div>
+  <div class="sentiment-row">
+    <div class="sent-item"><div class="sent-value" id="sCompound" style="color:var(--accent2)">—</div><div class="sent-label">Compound</div></div>
+    <div class="sent-item"><div class="sent-value" id="sPositive" style="color:var(--c-N)">—</div><div class="sent-label">Positive</div></div>
+    <div class="sent-item"><div class="sent-value" id="sNegative" style="color:var(--danger)">—</div><div class="sent-label">Negative</div></div>
+    <div class="sent-item"><div class="sent-value" id="sLabel" style="color:var(--accent)">—</div><div class="sent-label">RoBERTa</div></div>
+  </div>
+ 
+  <div class="section-label">Big Five — OCEAN traits</div>
+  <div class="ocean-grid" id="oceanGrid"></div>
+ 
+  <div class="section-label">Behavioral insights</div>
+  <div class="insight-grid" id="insightGrid"></div>
+ 
+  <div class="section-label">Strengths & blind spots</div>
+  <div class="sw-grid" id="swGrid"></div>
+ 
+  <div class="section-label">Career fit</div>
+  <div class="career-row" id="careerRow"></div>
+ 
+  <button class="reset-btn" onclick="resetAll()">← Analyze new text</button>
+</section>
+ 
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-ring"></div>
+  <div class="loading-title">Analyzing personality…</div>
+  <div class="loading-steps" id="loadingSteps"></div>
+</div>
+ 
+<footer>
+  <span>PersonaLens — NLP Personality Analysis</span>
+  <span>Built with FastAPI · HuggingFace · Claude API</span>
+</footer>
+</div>
+ 
+<script>
+const API = 'http://127.0.0.1:8000';
+ 
+const samples = {
+  analytical:`I've been reading about distributed systems and the CAP theorem. It's elegant in a frustrating way — consistency, availability, partition tolerance, but never all three. Most engineers default to availability without thinking through the tradeoffs. I spent three hours yesterday building a proof-of-concept to test eventual consistency in a Redis cluster. The results matched theory exactly, which is both satisfying and a little boring. I prefer when experiments surprise me. I've started journaling my debugging sessions because I solve problems faster when I write out my assumptions first. The act of writing forces precision.`,
+  creative:`Some days the ideas come in floods and I can't type fast enough — other days I stare at the blank page like it owes me something. Wrote three poems this morning before 7am, scrapped two, kept one line from the third. Been obsessed with the concept of negative space — in art, in music, in conversation. What you leave out matters as much as what you put in. Maybe more. Went to an open mic last night, half the performers were nervous-wreck brilliant, the other half were confident but hollow. Confidence without depth is just noise.`,
+  leader:`Quick update from today's sprint review. We shipped the auth module two days ahead of schedule — the team should be proud. I want to call out Sarah specifically for catching the edge case in the token refresh logic. That would have been a nasty production incident. Going into next sprint, I'm pushing back on the PM's timeline for the recommendation engine. Three weeks isn't realistic given the current tech debt. I'd rather have an honest conversation now than overpromise and underdeliver. I've also scheduled 1:1s with everyone because I noticed energy is lower than usual.`,
+  introvert:`Spent the weekend mostly alone and it was exactly what I needed. Had one social thing Saturday — a birthday dinner, twelve people — and by 9pm I was completely drained even though I genuinely like everyone there. Recharged Sunday by reorganizing my bookshelf, making soup from scratch, and watching a documentary about deep sea creatures. I prefer small conversations to big ones. One hour of talking with one person I trust is worth more to me than an entire party. I don't think that makes me antisocial. I just have a smaller tank.`
+};
+ 
+const mockPersonality = {
+  analytical:{ocean:{O:72,C:88,E:42,A:58,N:35},evidence:{O:"Uses technical vocabulary and explores complex concepts with curiosity.",C:"Highly structured thinking — journals systematically, values precision.",E:"Prefers solo work and internal reflection over social interaction.",A:"Collaborative but task-focused; less emphasis on interpersonal warmth.",N:"Emotionally stable; approaches uncertainty with logic, not anxiety."},comms:{style:"Analytical",tone:"Precise & structured",desc:"Communicates through reasoning and evidence. Prefers clarity over warmth."},behavior:{thinking:"Systems thinker",decision:"Data-driven",stress:"Analysis paralysis",social:"Selective introvert"},strengths:["Deep analytical reasoning","Rigorous self-reflection","Systematic problem-solving"],weaknesses:["May over-intellectualize emotions","Risk of analysis paralysis"],career:["Software Engineer","Data Scientist","Research Analyst","Systems Architect"],confidence:87},
+  creative:{ocean:{O:94,C:38,E:55,A:68,N:62},evidence:{O:"Extremely high openness — obsessed with aesthetics, metaphor, and abstract concepts.",C:"Low conscientiousness — ideas flow freely but follow-through can be inconsistent.",E:"Ambiverted — energized by authentic performance but drained by hollow interaction.",A:"Warm and empathetic, values authentic connection over surface confidence.",N:"High emotional sensitivity — fuels creativity but also self-criticism."},comms:{style:"Expressive",tone:"Lyrical & associative",desc:"Communicates in metaphors and bursts of insight. Highly authentic voice."},behavior:{thinking:"Divergent & intuitive",decision:"Gut-led",stress:"Creative blocks & withdrawal",social:"Selectively social"},strengths:["Exceptional creative range","Authentic and distinctive voice","Deep aesthetic sensitivity"],weaknesses:["Inconsistent follow-through","High self-criticism"],career:["Creative Director","Writer","UX Designer","Brand Strategist"],confidence:83},
+  leader:{ocean:{O:65,C:82,E:78,A:76,N:28},evidence:{O:"Open to new approaches but pragmatic — values what works over pure novelty.",C:"Highly conscientious — plans ahead, delivers on commitments, manages proactively.",E:"Strong extraversion — draws energy from team, comfortable in leadership visibility.",A:"High agreeableness balanced with directness — names difficult truths with care.",N:"Very emotionally stable — calm under pressure, models equanimity for team."},comms:{style:"Driver",tone:"Direct & accountable",desc:"Clear, action-oriented communication. Balances honesty with team morale."},behavior:{thinking:"Strategic & practical",decision:"Consultative but decisive",stress:"Controlled urgency",social:"Confident extrovert"},strengths:["Natural accountability culture","Proactive upward communication","Strong team psychological safety"],weaknesses:["May push back too directly","Tendency to over-schedule people"],career:["Engineering Manager","Product Lead","Operations Director","Startup Founder"],confidence:91},
+  introvert:{ocean:{O:68,C:62,E:22,A:72,N:54},evidence:{O:"Intellectually curious — enjoys reorganizing, documentaries, and deep solo thinking.",C:"Moderately conscientious — self-aware about needs and personal boundaries.",E:"Very low extraversion — social energy drains quickly, strong preference for depth.",A:"High agreeableness — genuinely likes people but needs recovery time after interaction.",N:"Moderate neuroticism — emotionally attuned, manages well but sensitive to overload."},comms:{style:"Amiable",tone:"Reflective & precise",desc:"Chooses words carefully. Prefers depth over breadth. High self-awareness."},behavior:{thinking:"Introspective & deliberate",decision:"Values-aligned",stress:"Social fatigue & withdrawal",social:"Strong introvert"},strengths:["Deep self-awareness","Quality-over-quantity relationships","Thoughtful and precise communication"],weaknesses:["Social energy drains quickly","May under-assert needs in groups"],career:["Writer","Researcher","Software Developer","Therapist"],confidence:85}
+};
+ 
+const traitDefs=[
+  {key:'O',label:'Openness',color:'var(--c-O)'},
+  {key:'C',label:'Conscientiousness',color:'var(--c-C)'},
+  {key:'E',label:'Extraversion',color:'var(--c-E)'},
+  {key:'A',label:'Agreeableness',color:'var(--c-A)'},
+  {key:'N',label:'Neuroticism',color:'var(--c-N)'}
+];
+ 
+const steps=['Cleaning and tokenizing text…','Running VADER sentiment…','Running RoBERTa analysis…','Extracting keywords…','Building personality profile…','Finalizing results…'];
+let currentSample=null;
+ 
+async function checkBackend(){
+  try{
+    const r=await fetch(`${API}/health`,{signal:AbortSignal.timeout(3000)});
+    if(r.ok){document.getElementById('statusDot').className='dot online';document.getElementById('statusText').textContent='backend online';}
+    else throw new Error();
+  }catch{document.getElementById('statusDot').className='dot error';document.getElementById('statusText').textContent='backend offline';}
+}
+ 
+function updateCount(){
+  const len=document.getElementById('textInput').value.trim().length;
+  const el=document.getElementById('charCount');
+  el.textContent=`${len} characters`;
+  el.className='char-count'+(len>200?' good':len>60?' warn':'');
+  document.getElementById('analyzeBtn').disabled=len<30;
+}
+ 
+function loadSample(key){
+  currentSample=key;
+  document.getElementById('textInput').value=samples[key];
+  updateCount();
+}
+ 
+function showError(msg){document.getElementById('errorMsg').textContent=msg;document.getElementById('errorBanner').classList.add('visible');}
+function hideError(){document.getElementById('errorBanner').classList.remove('visible');}
+ 
+function animateSteps(cb){
+  const c=document.getElementById('loadingSteps');c.innerHTML='';let i=0;
+  const iv=setInterval(()=>{
+    if(i>0)c.children[i-1].classList.add('done');
+    if(i<steps.length){const el=document.createElement('div');el.className='loading-step';el.innerHTML=`<div class="step-dot"></div>${steps[i]}`;c.appendChild(el);i++;}
+    else{clearInterval(iv);setTimeout(cb,300);}
+  },350);
+}
+ 
+function renderSentiment(s){
+  document.getElementById('sCompound').textContent=s.vader.compound;
+  document.getElementById('sPositive').textContent=s.vader.positive;
+  document.getElementById('sNegative').textContent=s.vader.negative;
+  document.getElementById('sLabel').textContent=s.roberta.label+' '+Math.round(s.roberta.confidence*100)+'%';
+  document.getElementById('confidenceBadge').textContent=`Tone: ${s.roberta.label} · ${Math.round(s.roberta.confidence*100)}% confident`;
+}
+ 
+function renderPersonality(analysis) {
+  if (!analysis || analysis.error) {
+    showError('LLM analysis failed. Check your API key.');
+    return;
+  }
+
+  const ocean = analysis.ocean;
+  const traitMap = {
+    O: { label: 'Openness',          color: 'var(--c-O)', data: ocean.openness },
+    C: { label: 'Conscientiousness', color: 'var(--c-C)', data: ocean.conscientiousness },
+    E: { label: 'Extraversion',      color: 'var(--c-E)', data: ocean.extraversion },
+    A: { label: 'Agreeableness',     color: 'var(--c-A)', data: ocean.agreeableness },
+    N: { label: 'Neuroticism',       color: 'var(--c-N)', data: ocean.neuroticism },
+  };
+
+  // confidence badge
+  document.getElementById('confidenceBadge').textContent =
+    `Confidence: ${Math.round(analysis.confidence_score * 100)}%`;
+
+  // OCEAN bars
+  const og = document.getElementById('oceanGrid');
+  og.innerHTML = '';
+  Object.entries(traitMap).forEach(([key, { label, color, data }], i) => {
+    const score = data.score;
+    const pct   = score <= 10 ? score * 10 : score;
+    og.innerHTML += `
+      <div class="trait-row" style="animation-delay:${i * 0.07}s">
+        <div class="trait-name" style="color:${color}">${label}</div>
+        <div class="trait-bar-bg">
+          <div class="trait-bar-fill" id="bar-${key}" style="background:${color}"></div>
+        </div>
+        <div class="trait-score" style="color:${color}">${score}</div>
+        <div class="trait-evidence">${data.evidence}</div>
+      </div>`;
+  });
+
+  setTimeout(() => {
+    Object.entries(traitMap).forEach(([key, { data }]) => {
+      const score = data.score;
+      const pct   = score <= 10 ? score * 10 : score;
+      document.getElementById(`bar-${key}`).style.width = pct + '%';
+    });
+  }, 120);
+
+  // Behavioral insights
+  const b = analysis.behavioral_insights;
+  const c = analysis.communication_style;
+  document.getElementById('insightGrid').innerHTML = `
+    <div class="insight-card" style="animation-delay:0.05s">
+      <div class="insight-card-label"><div class="ic-dot" style="background:var(--accent)"></div>Comms style</div>
+      <div class="insight-value">${c.primary_style}</div>
+      <div class="insight-desc">${c.tone}</div>
+    </div>
+    <div class="insight-card" style="animation-delay:0.1s">
+      <div class="insight-card-label"><div class="ic-dot" style="background:var(--accent2)"></div>Thinking style</div>
+      <div class="insight-value">${b.thinking_style}</div>
+      <div class="insight-desc">${b.social_orientation}</div>
+    </div>
+    <div class="insight-card" style="animation-delay:0.15s">
+      <div class="insight-card-label"><div class="ic-dot" style="background:var(--accent3)"></div>Decision making</div>
+      <div class="insight-value">${b.decision_making}</div>
+      <div class="insight-desc">${c.description}</div>
+    </div>
+    <div class="insight-card" style="animation-delay:0.2s">
+      <div class="insight-card-label"><div class="ic-dot" style="background:var(--c-A)"></div>Under pressure</div>
+      <div class="insight-value">Stress signal</div>
+      <div class="insight-desc">${b.stress_signals}</div>
+    </div>`;
+
+  // Strengths / Weaknesses
+  document.getElementById('swGrid').innerHTML = `
+    <div class="sw-card s" style="animation-delay:0.1s">
+      <div class="sw-title s">◆ Strengths</div>
+      <ul class="sw-list">${analysis.strengths.map(s => `<li>${s}</li>`).join('')}</ul>
+    </div>
+    <div class="sw-card w" style="animation-delay:0.15s">
+      <div class="sw-title w">◆ Blind spots</div>
+      <ul class="sw-list">${analysis.weaknesses.map(w => `<li>${w}</li>`).join('')}</ul>
+    </div>`;
+
+  // Career fit
+  document.getElementById('careerRow').innerHTML =
+    analysis.career_fit.map(c => `<span class="career-tag">${c}</span>`).join('');
+}
+ 
+async function runAnalysis(){
+  const text=document.getElementById('textInput').value.trim();
+  if(text.length<30)return;
+  hideError();
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('loadingOverlay').classList.add('active');
+ 
+  animateSteps(async()=>{
+    try{
+      const res=await fetch(`${API}/analyze`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text,source_type:document.getElementById('sourceType').value})
+      });
+      if(!res.ok){const e=await res.json();throw new Error(e.detail||'Server error');}
+      const data=await res.json();
+ 
+      // Show LIVE sentiment from your backend
+      renderSentiment(data.signals.sentiment);
+
+     // Show REAL personality from LLM
+      renderPersonality(data.analysis);
+ 
+    }catch(err){
+      showError(err.message.includes('fetch')||err.message.includes('Failed')
+        ?'Cannot connect to backend. Make sure uvicorn is running: uvicorn main:app --reload'
+        :err.message);
+      document.getElementById('loadingOverlay').classList.remove('active');
+      return;
+    }
+    document.getElementById('loadingOverlay').classList.remove('active');
+    document.getElementById('results').classList.add('visible');
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+}
+ 
+function resetAll(){
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('textInput').value='';
+  currentSample=null;updateCount();hideError();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+ 
+checkBackend();
+setInterval(checkBackend,15000);
+</script>
+</body>
+</html>
