@@ -1,11 +1,7 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "pip3 install -r personalens/requirements.txt && python3 -m spacy download en_core_web_sm"
-  },
   "deploy": {
-    "startCommand": "cd personalens/backend && uvicorn main:app --host 0.0.0.0 --port $PORT",
+    "startCommand": "uvicorn backend.main:app --host 0.0.0.0 --port $PORT",
     "restartPolicyType": "ON_FAILURE"
   }
 }
