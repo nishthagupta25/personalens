@@ -3,8 +3,20 @@ import json
 import re
 from groq import Groq
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+# Try multiple possible .env locations
+for env_path in [
+    Path(__file__).resolve().parent.parent.parent / ".env",  # personalens/.env
+    Path(__file__).resolve().parent.parent / ".env",          # backend/.env
+    Path(__file__).resolve().parent / ".env",                 # pipeline/.env
+]:
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+        print(f"[llm] .env found at: {env_path}")
+        break
+else:
+    print("[llm] ⚠️ .env NOT found anywhere!")
 
 print("[llm] Loading Groq client...")
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
