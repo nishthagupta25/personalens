@@ -10,6 +10,6 @@ RUN python -m spacy download en_core_web_sm
 
 COPY personalens/ .
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["/bin/sh", "-c", "cd /app/backend && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["/bin/sh", "-c", "cd /app/backend && uvicorn main:app --host 0.0.0.0 --port 8080"]
