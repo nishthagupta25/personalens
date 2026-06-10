@@ -10,14 +10,8 @@ from groq import Groq
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 import spacy
 
-# Load env
-for env_path in [
-    Path(__file__).resolve().parent.parent / ".env",
-    Path(__file__).resolve().parent / ".env",
-]:
-    if env_path.exists():
-        load_dotenv(dotenv_path=env_path)
-        break
+# Load env (local) — Railway uses env vars directly
+load_dotenv()
 
 # Load lightweight models only
 print("[lite] Loading VADER...")
