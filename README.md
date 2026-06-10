@@ -1,6 +1,9 @@
 # PersonaLens 🔍
 ### AI-Powered Personality Analysis from Text
 
+## 🚀 Live Demo
+👉 [Try PersonaLens](https://nishthagupta25.github.io/personalens/personalens/frontend/index.html)
+
 > Paste any text — tweets, chats, essays — and get a deep personality profile powered by a 3-layer NLP pipeline.
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
