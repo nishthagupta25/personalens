@@ -405,8 +405,10 @@ function renderSentiment(s){
   document.getElementById('sCompound').textContent=s.vader.compound;
   document.getElementById('sPositive').textContent=s.vader.positive;
   document.getElementById('sNegative').textContent=s.vader.negative;
-  document.getElementById('sLabel').textContent=s.roberta.label+' '+Math.round(s.roberta.confidence*100)+'%';
-  document.getElementById('confidenceBadge').textContent=`Tone: ${s.roberta.label} · ${Math.round(s.roberta.confidence*100)}% confident`;
+  const label = s.roberta ? s.roberta.label : s.summary.overall_tone;
+  const conf  = s.roberta ? Math.round(s.roberta.confidence*100) : Math.round(s.summary.intensity*100);
+  document.getElementById('sLabel').textContent=label+' '+conf+'%';
+  document.getElementById('confidenceBadge').textContent=`Tone: ${label} · ${conf}% confident`;
 }
  
 function renderPersonality(analysis) {
