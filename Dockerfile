@@ -2,7 +2,7 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY personalens/requirements_lite.txt .
+COPY personalens/backend_lite/requirements_lite.txt .
 
 RUN pip install --no-cache-dir -r requirements_lite.txt
 
